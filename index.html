@@ -490,35 +490,39 @@ function highlightDup() {
   highlightMode = 'dup';
   
   // 累积模式：只处理重复行，不清除其他标记
+  let minRow = Infinity;
   const rows = document.querySelectorAll('#dataTable tbody tr');
   rows.forEach((tr, idx) => {
     if (isDuplicateRow(idx)) {
       // 移除初始红色，换成橙色
       tr.classList.remove('initial-anomaly');
       tr.classList.add('duplicate-row');
-      // 标记为已处理
       tr.classList.add('highlighted');
-      // 定位到第一行重复数据
-      tr.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      minRow = Math.min(minRow, idx);
     }
   });
+  
+  // 定位到最小行序的重复行
+  if (minRow < Infinity) {
+    rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
   
   // 更新按钮状态
   document.querySelectorAll('.btn-dup, .btn-miss, .btn-outlier').forEach(b => b.classList.remove('active'));
   document.getElementById('btnDup').classList.add('active');
   
-  // 更新图表
+  // 更新图表（已处理类别数量清零）
   renderAbnormalChart('dup');
   
-  // 暂停几秒后恢复
+  // 暂停滚动（不自动恢复）
   stopScroll();
-  setTimeout(() => startScroll(), 3000);
 }
 
 function highlightMiss() {
   highlightMode = 'miss';
   
   // 累积模式：只处理缺失单元格，不清除其他标记
+  let minRow = Infinity;
   const rows = document.querySelectorAll('#dataTable tbody tr');
   rows.forEach((tr, idx) => {
     const tds = tr.querySelectorAll('td:not(:first-child)');
@@ -528,13 +532,15 @@ function highlightMiss() {
         td.classList.remove('initial-anomaly');
         td.classList.add('missing');
         td.classList.add('highlighted');
+        minRow = Math.min(minRow, idx);
       }
     });
-    // 如果这一行有缺失，定位到它
-    if (rowData[idx] && rowData[idx].meta && rowData[idx].meta.has_missing) {
-      tr.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }
   });
+  
+  // 定位到最小行序的缺失行
+  if (minRow < Infinity) {
+    rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
   
   document.querySelectorAll('.btn-dup, .btn-miss, .btn-outlier').forEach(b => b.classList.remove('active'));
   document.getElementById('btnMiss').classList.add('active');
@@ -542,13 +548,13 @@ function highlightMiss() {
   renderAbnormalChart('miss');
   
   stopScroll();
-  setTimeout(() => startScroll(), 3000);
 }
 
 function highlightOutlier() {
   highlightMode = 'outlier';
   
   // 累积模式：只处理异常单元格，不清除其他标记
+  let minRow = Infinity;
   const rows = document.querySelectorAll('#dataTable tbody tr');
   rows.forEach((tr, idx) => {
     const tds = tr.querySelectorAll('td:not(:first-child)');
@@ -558,13 +564,15 @@ function highlightOutlier() {
         td.classList.remove('initial-anomaly');
         td.style.backgroundColor = 'rgba(59,130,246,0.25)';
         td.classList.add('highlighted');
+        minRow = Math.min(minRow, idx);
       }
     });
-    // 定位到有异常的行
-    if (abnormalPos.some(p => p[0] === idx)) {
-      tr.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }
   });
+  
+  // 定位到最小行序的异常行
+  if (minRow < Infinity) {
+    rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
   
   document.querySelectorAll('.btn-dup, .btn-miss, .btn-outlier').forEach(b => b.classList.remove('active'));
   document.getElementById('btnOutlier').classList.add('active');
@@ -572,7 +580,6 @@ function highlightOutlier() {
   renderAbnormalChart('outlier');
   
   stopScroll();
-  setTimeout(() => startScroll(), 3000);
 }
 
 function clearHighlights() {
@@ -603,38 +610,49 @@ function clearHighlights() {
 
 // ====== 图表渲染 ======
 function renderAbnormalChart(type) {
-  // 简单统计
+  // 统计各类异常数量
   let counts = { abnormal: abnormalPos.length, missing: missingPos.length, duplicate: duplicatePairs.length };
-  let total = counts.abnormal + counts.missing + counts.duplicate || 1;
+  // 已处理的计数（从DOM中统计）
+  let processedDup = document.querySelectorAll('#dataTable tbody tr.duplicate-row').length;
+  let processedMiss = document.querySelectorAll('#dataTable tbody td.missing').length;
+  let processedAbnormal = document.querySelectorAll('#dataTable tbody td[style*="background:rgba(59,130,246"]').length;
   
-  // 根据type选择显示
+  // 总数 = 行数（1267）
+  const totalRows = rowData.length || 1267;
+  
+  // 根据type选择显示：已处理的类别数量清零（显示为已处理）
   let labels, values, color;
   switch(type) {
     case 'dup':
-      labels = ['正常数据', '重复值'];
-      values = [total - counts.duplicate, counts.duplicate];
-      color = ['#2a3a5c', '#f59e0b'];
+      // 重复已处理 → 数量清零只显示剩余未处理的
+      let remainingDup = counts.duplicate - processedDup;
+      labels = ['正常', '重复值(未处理)', '重复值(已处理)'];
+      values = [totalRows - counts.duplicate, Math.max(0, remainingDup), processedDup];
+      color = ['#2a3a5c', '#f59e0b', '#78716c'];
       break;
     case 'miss':
-      labels = ['正常数据', '缺失值'];
-      values = [total - counts.missing, counts.missing];
-      color = ['#2a3a5c', '#10b981'];
+      let remainingMiss = counts.missing - processedMiss;
+      labels = ['正常', '缺失值(未处理)', '缺失值(已处理)'];
+      values = [totalRows - counts.missing, Math.max(0, remainingMiss), processedMiss];
+      color = ['#2a3a5c', '#10b981', '#78716c'];
       break;
     case 'outlier':
-      labels = ['正常数据', '异常值'];
-      values = [total - counts.abnormal, counts.abnormal];
-      color = ['#2a3a5c', '#3b82f6'];
+      let remainingOutlier = counts.abnormal - processedAbnormal;
+      labels = ['正常', '异常值(未处理)', '异常值(已处理)'];
+      values = [totalRows - counts.abnormal, Math.max(0, remainingOutlier), processedAbnormal];
+      color = ['#2a3a5c', '#3b82f6', '#78716c'];
       break;
     default:
-      labels = ['异常值', '缺失值', '重复值'];
-      values = [counts.abnormal, counts.missing, counts.duplicate];
-      color = ['#3b82f6', '#10b981', '#f59e0b'];
+      // 初始状态：显示全部三类异常分区，占比均为 数量/1267
+      labels = ['重复值', '缺失值', '异常值', '正常'];
+      values = [counts.duplicate, counts.missing, counts.abnormal, totalRows - counts.duplicate - counts.missing - counts.abnormal];
+      color = ['#f59e0b', '#10b981', '#3b82f6', '#2a3a5c'];
   }
   
-  drawPie('canvasAbnormal', labels, values, color);
+  drawPie('canvasAbnormal', labels, values, color, totalRows);
 }
 
-function drawPie(canvasId, labels, values, colors) {
+function drawPie(canvasId, labels, values, colors, totalRows) {
   const canvas = document.getElementById(canvasId);
   const container = canvas.parentElement;
   const placeholder = container.querySelector('.placeholder');
@@ -658,13 +676,15 @@ function drawPie(canvasId, labels, values, colors) {
   
   ctx.clearRect(0, 0, w, h);
   
-  const total = values.reduce((a, b) => a + b, 0) || 1;
+  const total = totalRows || values.reduce((a, b) => a + b, 0) || 1;
   let startAngle = -Math.PI / 2;
   
   values.forEach((val, i) => {
     if (val === 0) return;
     const angle = (val / total) * 2 * Math.PI;
     const midAngle = startAngle + angle / 2;
+    const pct = (val / total * 100);
+    const displayPct = pct < 0.1 ? pct.toFixed(2) : pct.toFixed(1);
     
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -678,7 +698,7 @@ function drawPie(canvasId, labels, values, colors) {
     ctx.lineWidth = 2;
     ctx.stroke();
     
-    // 扇区上方标注数字
+    // 扇区上方标注 "数量(比例%)"
     const labelRadius = radius * 0.65;
     const labelX = cx + Math.cos(midAngle) * labelRadius;
     const labelY = cy + Math.sin(midAngle) * labelRadius;
@@ -686,36 +706,41 @@ function drawPie(canvasId, labels, values, colors) {
     ctx.font = 'bold 13px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(val, labelX, labelY - 7);
-    ctx.font = '10px sans-serif';
+    ctx.fillText(val, labelX, labelY - 10);
+    ctx.font = '11px sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.fillText(labels[i], labelX, labelY + 7);
+    ctx.fillText(displayPct + '%', labelX, labelY + 8);
     
     startAngle += angle;
   });
   
   // 中心文字
   ctx.fillStyle = '#e0e8f0';
-  ctx.font = 'bold 14px sans-serif';
+  ctx.font = 'bold 16px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(total, cx, cy - 8);
+  ctx.fillText(total, cx, cy - 10);
   ctx.fillStyle = '#64748b';
   ctx.font = '11px sans-serif';
-  ctx.fillText('总数', cx, cy + 10);
+  ctx.fillText('总行数', cx, cy + 8);
   
-  // 图例
+  // 图例（显示完整标签+数量+比例）
   const legendY = h - 10;
   let legendX = 10;
   ctx.font = '11px sans-serif';
   labels.forEach((label, i) => {
+    const pct = (values[i] / total * 100);
+    const pctStr = pct < 0.1 ? pct.toFixed(2) : pct.toFixed(1);
+    // 跳过比例为0的
+    if (values[i] === 0) return;
+    const text = `${label}: ${values[i]} (${pctStr}%)`;
     ctx.fillStyle = colors[i];
     ctx.fillRect(legendX, legendY - 5, 8, 8);
     ctx.fillStyle = '#94a3b8';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${label}(${values[i]})`, legendX + 12, legendY);
-    legendX += ctx.measureText(`${label}(${values[i]})`).width + 20;
+    ctx.fillText(text, legendX + 12, legendY);
+    legendX += ctx.measureText(text).width + 20;
   });
 }
 
