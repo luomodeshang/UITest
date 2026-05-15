@@ -336,10 +336,11 @@ async function importDataset() {
   if (dsId === 0) dsId = Math.floor(Math.random() * 20) + 1;
   
   document.getElementById('tableInfo').textContent = '加载中...';
+  console.log('importDataset: dsId=' + dsId);
   
   try {
-    const resp = await fetch(`data/dataset_${dsId}.json`);
-    // 因为GitHub Pages路径不同，用相对路径试试
+    const resp = await fetch('data/dataset_' + dsId + '.json');
+    if (!resp.ok) throw new Error('Fetch failed: ' + resp.status);
     const data = await resp.json();
     applyDataset(data);
   } catch (e) {
@@ -365,8 +366,6 @@ function applyDataset(data) {
   abnormalPos = data.meta.abnormal_positions || [];
   missingPos = data.meta.missing_positions || [];
   duplicatePairs = data.meta.duplicate_pairs || [];
-  
-  document.getElementById('tableInfo').textContent = `${data.rows}行 × ${data.cols}列 | 数据集 #${data.id}`;
   
   renderTable();
   
