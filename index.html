@@ -546,11 +546,11 @@ function highlightMiss() {
   // 定位到最小行序的缺失行，同时水平滚动到第一个缺失列
   if (minRow < Infinity) {
     rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
-    // 找到该行第一个缺失单元格
+    // 找到该行第一个缺失单元格（用isMissing精确定位）
     const tds = rows[minRow].querySelectorAll('td:not(:first-child)');
     const wrapper = document.getElementById('tableWrapper');
     for (let ci = 0; ci < tds.length; ci++) {
-      if (tds[ci].classList.contains('missing') || tds[ci].classList.contains('highlighted')) {
+      if (isMissing(minRow, ci)) {
         wrapper.scrollLeft = tds[ci].offsetLeft - 60;
         break;
       }
@@ -587,11 +587,11 @@ function highlightOutlier() {
   // 定位到最小行序的异常行，同时水平滚动到第一个异常列
   if (minRow < Infinity) {
     rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
-    // 找到该行第一个异常单元格
+    // 找到该行第一个异常单元格（用isAbnormal精确定位）
     const tds = rows[minRow].querySelectorAll('td:not(:first-child)');
     const wrapper = document.getElementById('tableWrapper');
     for (let ci = 0; ci < tds.length; ci++) {
-      if (tds[ci].style.backgroundColor && tds[ci].style.backgroundColor.includes('rgba(59,130,246') || tds[ci].classList.contains('highlighted')) {
+      if (isAbnormal(minRow, ci)) {
         wrapper.scrollLeft = tds[ci].offsetLeft - 60;
         break;
       }
