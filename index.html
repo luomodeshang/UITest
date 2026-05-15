@@ -502,9 +502,15 @@ function highlightDup() {
     }
   });
   
-  // 定位到最小行序的重复行
+  // 定位到最小行序的重复行，同时水平滚动到第一个异常列
   if (minRow < Infinity) {
     rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // 整行标记的重复行：定位到第1个数据列
+    const wrapper = document.getElementById('tableWrapper');
+    const firstDataCell = rows[minRow].querySelector('td:nth-child(2)');
+    if (firstDataCell) {
+      wrapper.scrollLeft = firstDataCell.offsetLeft - 60;
+    }
   }
   
   // 更新按钮状态
@@ -537,9 +543,18 @@ function highlightMiss() {
     });
   });
   
-  // 定位到最小行序的缺失行
+  // 定位到最小行序的缺失行，同时水平滚动到第一个缺失列
   if (minRow < Infinity) {
     rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // 找到该行第一个缺失单元格
+    const tds = rows[minRow].querySelectorAll('td:not(:first-child)');
+    const wrapper = document.getElementById('tableWrapper');
+    for (let ci = 0; ci < tds.length; ci++) {
+      if (tds[ci].classList.contains('missing') || tds[ci].classList.contains('highlighted')) {
+        wrapper.scrollLeft = tds[ci].offsetLeft - 60;
+        break;
+      }
+    }
   }
   
   document.querySelectorAll('.btn-dup, .btn-miss, .btn-outlier').forEach(b => b.classList.remove('active'));
@@ -569,9 +584,18 @@ function highlightOutlier() {
     });
   });
   
-  // 定位到最小行序的异常行
+  // 定位到最小行序的异常行，同时水平滚动到第一个异常列
   if (minRow < Infinity) {
     rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // 找到该行第一个异常单元格
+    const tds = rows[minRow].querySelectorAll('td:not(:first-child)');
+    const wrapper = document.getElementById('tableWrapper');
+    for (let ci = 0; ci < tds.length; ci++) {
+      if (tds[ci].style.backgroundColor && tds[ci].style.backgroundColor.includes('rgba(59,130,246') || tds[ci].classList.contains('highlighted')) {
+        wrapper.scrollLeft = tds[ci].offsetLeft - 60;
+        break;
+      }
+    }
   }
   
   document.querySelectorAll('.btn-dup, .btn-miss, .btn-outlier').forEach(b => b.classList.remove('active'));
