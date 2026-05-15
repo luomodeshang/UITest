@@ -170,8 +170,8 @@ tr:hover td:first-child { background:#1a2744; }
 td.initial-anomaly { background:rgba(239,68,68,0.25) !important; color:#fca5a5; }
 tr.initial-anomaly td:not(:first-child) { background:rgba(239,68,68,0.25) !important; color:#fca5a5; }
 tr.initial-anomaly:hover td:not(:first-child) { background:rgba(239,68,68,0.35) !important; }
-/* 缺失值灰色（处理后） */
-td.missing { background:rgba(107,114,128,0.3) !important; color:#9ca3af; }
+/* 缺失值绿色（处理后） */
+td.missing { background:rgba(16,185,129,0.25) !important; color:#6ee7b7; }
 /* 重复值橙色 */
 td.duplicate { background:rgba(245,158,11,0.2) !important; }
 tr.duplicate-row td { background:rgba(245,158,11,0.12); }
@@ -504,9 +504,11 @@ function highlightDup() {
   
   // 定位到最小行序的重复行，同时水平滚动到第一个异常列
   if (minRow < Infinity) {
-    rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
-    // 整行标记的重复行：定位到第1个数据列
     const wrapper = document.getElementById('tableWrapper');
+    // 手动计算垂直位置：用行高 * 行号
+    const rowHeight = rows[0] ? rows[0].offsetHeight : 30;
+    wrapper.scrollTop = Math.max(0, minRow * rowHeight - wrapper.clientHeight / 2);
+    // 整行标记的重复行：定位到第1个数据列
     const firstDataCell = rows[minRow].querySelector('td:nth-child(2)');
     if (firstDataCell) {
       wrapper.scrollLeft = firstDataCell.offsetLeft - 60;
@@ -545,10 +547,12 @@ function highlightMiss() {
   
   // 定位到最小行序的缺失行，同时水平滚动到第一个缺失列
   if (minRow < Infinity) {
-    rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const wrapper = document.getElementById('tableWrapper');
+    // 手动计算垂直位置
+    const rowHeight = rows[0] ? rows[0].offsetHeight : 30;
+    wrapper.scrollTop = Math.max(0, minRow * rowHeight - wrapper.clientHeight / 2);
     // 找到该行第一个缺失单元格（用isMissing精确定位）
     const tds = rows[minRow].querySelectorAll('td:not(:first-child)');
-    const wrapper = document.getElementById('tableWrapper');
     for (let ci = 0; ci < tds.length; ci++) {
       if (isMissing(minRow, ci)) {
         wrapper.scrollLeft = tds[ci].offsetLeft - 60;
@@ -586,10 +590,12 @@ function highlightOutlier() {
   
   // 定位到最小行序的异常行，同时水平滚动到第一个异常列
   if (minRow < Infinity) {
-    rows[minRow].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const wrapper = document.getElementById('tableWrapper');
+    // 手动计算垂直位置
+    const rowHeight = rows[0] ? rows[0].offsetHeight : 30;
+    wrapper.scrollTop = Math.max(0, minRow * rowHeight - wrapper.clientHeight / 2);
     // 找到该行第一个异常单元格（用isAbnormal精确定位）
     const tds = rows[minRow].querySelectorAll('td:not(:first-child)');
-    const wrapper = document.getElementById('tableWrapper');
     for (let ci = 0; ci < tds.length; ci++) {
       if (isAbnormal(minRow, ci)) {
         wrapper.scrollLeft = tds[ci].offsetLeft - 60;
