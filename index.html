@@ -166,9 +166,11 @@ td:first-child {
 tr:hover td { background:rgba(30,58,95,0.5); }
 tr:hover td:first-child { background:#1a2744; }
 
-/* 异常单元格标红 */
-td.abnormal { background:rgba(239,68,68,0.25) !important; color:#fca5a5; }
-/* 缺失值灰色 */
+/* 初始异常（未处理）标红 */
+td.initial-anomaly { background:rgba(239,68,68,0.25) !important; color:#fca5a5; }
+tr.initial-anomaly td:not(:first-child) { background:rgba(239,68,68,0.25) !important; color:#fca5a5; }
+tr.initial-anomaly:hover td:not(:first-child) { background:rgba(239,68,68,0.35) !important; }
+/* 缺失值灰色（处理后） */
 td.missing { background:rgba(107,114,128,0.3) !important; color:#9ca3af; }
 /* 重复值橙色 */
 td.duplicate { background:rgba(245,158,11,0.2) !important; }
@@ -419,24 +421,20 @@ function renderTable() {
       
       if (val === null || val === undefined || val === '') {
         td.textContent = 'NaN';
-        td.classList.add('missing');
+        // 缺失：初始标红 + 类型标记
+        td.classList.add('initial-anomaly', 'type-missing');
       } else {
         td.textContent = typeof val === 'number' ? val.toFixed(2) : val;
       }
       
-      // 异常值标记
+      // 异常值：初始标红 + 类型标记
       if (isAbnormal(idx, colIdx)) {
-        td.classList.add('abnormal');
+        td.classList.add('initial-anomaly', 'type-outlier');
       }
       
-      // 缺失值标记
-      if (isMissing(idx, colIdx)) {
-        td.classList.add('missing');
-      }
-      
-      // 如果是重复行，先标记
+      // 重复行：整个行初始标红
       if (isDuplicateRow(idx)) {
-        tr.classList.add('duplicate-row');
+        tr.classList.add('initial-anomaly', 'type-dup');
       }
       
       tr.appendChild(td);
@@ -490,12 +488,16 @@ function toggleScroll() {
 // ====== 高亮功能 ======
 function highlightDup() {
   highlightMode = 'dup';
-  clearHighlights();
   
+  // 累积模式：只处理重复行，不清除其他标记
   const rows = document.querySelectorAll('#dataTable tbody tr');
   rows.forEach((tr, idx) => {
     if (isDuplicateRow(idx)) {
+      // 移除初始红色，换成橙色
+      tr.classList.remove('initial-anomaly');
       tr.classList.add('duplicate-row');
+      // 标记为已处理
+      tr.classList.add('highlighted');
       // 定位到第一行重复数据
       tr.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
@@ -515,12 +517,21 @@ function highlightDup() {
 
 function highlightMiss() {
   highlightMode = 'miss';
-  clearHighlights();
   
+  // 累积模式：只处理缺失单元格，不清除其他标记
   const rows = document.querySelectorAll('#dataTable tbody tr');
   rows.forEach((tr, idx) => {
-    if (rowData[idx].meta && rowData[idx].meta.has_missing) {
-      tr.style.backgroundColor = 'rgba(16,185,129,0.08)';
+    const tds = tr.querySelectorAll('td:not(:first-child)');
+    tds.forEach((td, colIdx) => {
+      if (isMissing(idx, colIdx)) {
+        // 移除初始红色，换成绿色
+        td.classList.remove('initial-anomaly');
+        td.classList.add('missing');
+        td.classList.add('highlighted');
+      }
+    });
+    // 如果这一行有缺失，定位到它
+    if (rowData[idx] && rowData[idx].meta && rowData[idx].meta.has_missing) {
       tr.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
   });
@@ -536,15 +547,17 @@ function highlightMiss() {
 
 function highlightOutlier() {
   highlightMode = 'outlier';
-  clearHighlights();
   
-  // 高亮异常单元格
+  // 累积模式：只处理异常单元格，不清除其他标记
   const rows = document.querySelectorAll('#dataTable tbody tr');
   rows.forEach((tr, idx) => {
     const tds = tr.querySelectorAll('td:not(:first-child)');
     tds.forEach((td, colIdx) => {
       if (isAbnormal(idx, colIdx)) {
+        // 移除初始红色，换成蓝色
+        td.classList.remove('initial-anomaly');
         td.style.backgroundColor = 'rgba(59,130,246,0.25)';
+        td.classList.add('highlighted');
       }
     });
     // 定位到有异常的行
@@ -565,8 +578,25 @@ function highlightOutlier() {
 function clearHighlights() {
   document.querySelectorAll('#dataTable tbody tr').forEach(tr => {
     tr.style.backgroundColor = '';
-    tr.classList.remove('duplicate-row');
-    tr.querySelectorAll('td').forEach(td => td.style.backgroundColor = '');
+    tr.classList.remove('duplicate-row', 'highlighted');
+    // 恢复所有单元格的初始红色
+    tr.querySelectorAll('td').forEach(td => {
+      td.style.backgroundColor = '';
+      td.classList.remove('missing', 'highlighted');
+      // 如果是异常/缺失单元格，恢复 initial-anomaly
+      const rowIdx = parseInt(tr.dataset.rowIdx);
+      const colIdx = Array.from(td.parentNode.children).indexOf(td) - 1;
+      if (colIdx >= 0) {
+        if (isAbnormal(rowIdx, colIdx) || isMissing(rowIdx, colIdx)) {
+          td.classList.add('initial-anomaly');
+        }
+      }
+    });
+    // 恢复行的初始红色
+    const rowIdx = parseInt(tr.dataset.rowIdx);
+    if (isDuplicateRow(rowIdx)) {
+      tr.classList.add('initial-anomaly');
+    }
   });
   highlightMode = 'none';
 }
@@ -634,6 +664,7 @@ function drawPie(canvasId, labels, values, colors) {
   values.forEach((val, i) => {
     if (val === 0) return;
     const angle = (val / total) * 2 * Math.PI;
+    const midAngle = startAngle + angle / 2;
     
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -646,6 +677,19 @@ function drawPie(canvasId, labels, values, colors) {
     ctx.strokeStyle = '#0d111d';
     ctx.lineWidth = 2;
     ctx.stroke();
+    
+    // 扇区上方标注数字
+    const labelRadius = radius * 0.65;
+    const labelX = cx + Math.cos(midAngle) * labelRadius;
+    const labelY = cy + Math.sin(midAngle) * labelRadius;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(val, labelX, labelY - 7);
+    ctx.font = '10px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText(labels[i], labelX, labelY + 7);
     
     startAngle += angle;
   });
