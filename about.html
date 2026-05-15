@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UITest · 关于</title>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="navbar" role="banner">
+    <div class="container navbar__inner">
+      <a href="index.html" class="navbar__brand" aria-label="回到首页">
+        <span class="navbar__logo">🖥️</span>
+        <span class="navbar__title">UITest</span>
+      </a>
+      <nav class="navbar__nav" role="navigation" aria-label="主导航">
+        <ul class="navbar__menu">
+          <li><a href="index.html" class="navbar__link">首页</a></li>
+          <li><a href="about.html" class="navbar__link active" aria-current="page">关于</a></li>
+          <li><a href="features.html" class="navbar__link">功能</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main role="main">
+    <section class="section" style="padding-top: 48px;">
+      <div class="container" style="max-width: 720px;">
+        <h1 class="section__title">关于 UITest</h1>
+        <div style="font-size: 1rem; line-height: 1.8; color: var(--color-text-secondary);">
+          <p style="margin-bottom: 16px;">UITest 是一个基于 Python Flask 构建的前端界面演示项目，旨在提供一个干净、现代、响应式的静态页面模板。</p>
+          <p>项目采用移动优先的设计策略，严格遵循 WCAG 2.1 AA 无障碍标准，确保所有用户都能获得良好的浏览体验。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="container footer__inner">
+      <p class="footer__copyright">&copy; 2026 UITest. 基于 Flask + 纯静态前端。</p>
+    </div>
+  </footer>
+  <script src="js/main.js" defer></script>
+</body>
+</html>

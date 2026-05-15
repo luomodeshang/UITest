@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UITest · 功能</title>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="navbar" role="banner">
+    <div class="container navbar__inner">
+      <a href="index.html" class="navbar__brand" aria-label="回到首页">
+        <span class="navbar__logo">🖥️</span>
+        <span class="navbar__title">UITest</span>
+      </a>
+      <nav class="navbar__nav" role="navigation" aria-label="主导航">
+        <ul class="navbar__menu">
+          <li><a href="index.html" class="navbar__link">首页</a></li>
+          <li><a href="about.html" class="navbar__link">关于</a></li>
+          <li><a href="features.html" class="navbar__link active" aria-current="page">功能</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main role="main">
+    <section class="section" style="padding-top: 48px;">
+      <div class="container" style="max-width: 720px;">
+        <h1 class="section__title">功能列表</h1>
+        <div style="display: grid; gap: 16px;">
+          <div class="card" style="text-align: left;"><strong>🎨 极简设计</strong><br><span style="color: var(--color-text-secondary); font-size: 0.875rem;">干净留白、舒适间距、克制用色</span></div>
+          <div class="card" style="text-align: left;"><strong>📱 响应式</strong><br><span style="color: var(--color-text-secondary); font-size: 0.875rem;">手机 / 平板 / 桌面全适配</span></div>
+          <div class="card" style="text-align: left;"><strong>♿ 无障碍</strong><br><span style="color: var(--color-text-secondary); font-size: 0.875rem;">语义化 HTML + ARIA 标签 + 键盘导航</span></div>
+          <div class="card" style="text-align: left;"><strong>⚡ 轻量</strong><br><span style="color: var(--color-text-secondary); font-size: 0.875rem;">纯 HTML/CSS/JS，零外部依赖</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="container footer__inner">
+      <p class="footer__copyright">&copy; 2026 UITest. 基于 Flask + 纯静态前端。</p>
+    </div>
+  </footer>
+  <script src="js/main.js" defer></script>
+</body>
+</html>

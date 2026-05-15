@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="UITest - 一个基于 Flask 的静态前端界面演示项目">
+  <meta name="theme-color" content="#2563eb">
+  <title>UITest · 首页</title>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="navbar" role="banner">
+    <div class="container navbar__inner">
+      <a href="/" class="navbar__brand" aria-label="回到首页">
+        <span class="navbar__logo">🖥️</span>
+        <span class="navbar__title">UITest</span>
+      </a>
+      <nav class="navbar__nav" role="navigation" aria-label="主导航">
+        <ul class="navbar__menu">
+          <li><a href="/" class="navbar__link active" aria-current="page">首页</a></li>
+          <li><a href="about.html" class="navbar__link">关于</a></li>
+          <li><a href="features.html" class="navbar__link">功能</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main role="main">
+    <section class="hero">
+      <div class="container hero__inner">
+        <h1 class="hero__title">UITest</h1>
+        <p class="hero__subtitle">一个干净、现代的静态前端界面项目</p>
+        <p class="hero__desc">基于 Python Flask 构建，采用移动优先的响应式设计，遵循无障碍标准和性能最佳实践。</p>
+        <div class="hero__actions">
+          <a href="#features" class="btn btn--primary">了解更多</a>
+          <a href="about.html" class="btn btn--outline">关于项目</a>
+        </div>
+      </div>
+    </section>
+    <section id="features" class="features section" aria-label="核心功能">
+      <div class="container">
+        <h2 class="section__title">核心特性</h2>
+        <div class="features__grid">
+          <article class="card">
+            <div class="card__icon">🎨</div>
+            <h3 class="card__title">干净设计</h3>
+            <p class="card__desc">极简主义设计风格，注重内容可读性与视觉层次感。</p>
+          </article>
+          <article class="card">
+            <div class="card__icon">📱</div>
+            <h3 class="card__title">响应式布局</h3>
+            <p class="card__desc">移动优先策略，完美适配手机、平板和桌面端。</p>
+          </article>
+          <article class="card">
+            <div class="card__icon">♿</div>
+            <h3 class="card__title">无障碍访问</h3>
+            <p class="card__desc">严格遵循 WCAG 2.1 AA 标准，确保包容性体验。</p>
+          </article>
+          <article class="card">
+            <div class="card__icon">⚡</div>
+            <h3 class="card__title">轻量高效</h3>
+            <p class="card__desc">纯静态页面，零依赖，秒级加载，开箱即用。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer" role="contentinfo">
+    <div class="container footer__inner">
+      <p class="footer__copyright">&copy; 2026 UITest. 基于 Flask + 纯静态前端。</p>
+    </div>
+  </footer>
+  <script src="js/main.js" defer></script>
+</body>
+</html>
